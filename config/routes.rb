@@ -1,12 +1,9 @@
+# config/routes.rb
 Rails.application.routes.draw do
-  resources :pokemon, only: [:index, :destroy] do
-    collection do
-      get :import
-      post :import 
-      get :captured
-    end
+  resources :pokemons, only: [:index] do
     member do
-      post :capture
+      post 'capture'
+      delete 'destroy'
     end
   end
 end
