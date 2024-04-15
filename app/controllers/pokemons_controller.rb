@@ -1,11 +1,12 @@
 # app/controllers/pokemons_controller.rb
 class PokemonsController < ApplicationController
   before_action :set_pokemon, only: [:capture, :destroy]
-  
-  def index
-    pokemons = Pokemon.all
-    render json: pokemons.as_json(only: [:id, :nombre, :tipo, :imagen, :estado_de_captura])
-  end
+
+def index
+  pokemons = Pokemon.all
+  render json: { pokemons: pokemons, total: Pokemon.count }
+end
+
   
 
   def capture
