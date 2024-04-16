@@ -2,6 +2,10 @@ class Pokemon < ApplicationRecord
   validates :nombre, :tipo, :imagen, presence: true
   enum estado_de_captura: { no_capturado: false, capturado: true }
 
+  def toggle_capture!
+    self.capturado? ? update(estado_de_captura: 'no_capturado') : update(estado_de_captura: 'capturado')
+  end
+
   def self.import_first_150
     url = 'https://pokeapi.co/api/v2/pokemon?limit=150'
     pokemons_data = JSON.parse(Net::HTTP.get(URI(url)))

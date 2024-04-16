@@ -35,18 +35,30 @@ class PokemonsController < ApplicationController
     end
   end
 
-
-  # POST /pokemons/:id/capture
   def capture
-    @pokemon.update(captured: true)
-    render json: @pokemon
+    if @pokemon.update(estado_de_captura: 'capturado')
+      render json: @pokemon
+    else
+      render json: @pokemon.errors, status: :unprocessable_entity
+    end
   end
 
-  # DELETE /pokemons/:id/release
   def release
-    @pokemon.update(captured: false)
-    render json: @pokemon
+    if @pokemon.update(estado_de_captura: 'no_capturado')
+      render json: @pokemon
+    else
+      render json: @pokemon.errors, status: :unprocessable_entity
+    end
   end
+
+  private
+
+  def set_pokemon
+    @pokemon = Pokemon.find(params[:id])
+  end
+
+
+
 
   private
 
