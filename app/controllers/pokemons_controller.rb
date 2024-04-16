@@ -1,25 +1,50 @@
 # app/controllers/pokemons_controller.rb
 class PokemonsController < ApplicationController
-  before_action :set_pokemon, only: [:capture, :destroy]
+  before_action :set_pokemon, only: [:capture, :release]
 
-def index
-  pokemons = Pokemon.all
-  render json: { pokemons: pokemons, total: Pokemon.count }
-end
+  # GET /pokemons
+  def index
+    @pokemons = Pokemon.page(params[:page]).per(20)
+    render json: @pokemons
+  end
 
-  
-
-  def capture
-    if Pokemon.where(estado_de_captura: true).count >= 6
-      oldest = Pokemon.where(estado_de_captura: true).order(:updated_at).first
-      oldest.update(estado_de_captura: false)
+  # POST /pokemons/import
+  def import
+    url = "https://pokeapi.co/api/v2/pokemon?limit=150"
+    response = HTTParty.get(url)
+    if response.success?
+      pokemons = response.parsed_response["results"]
+      pokemons.each do |pokemon_data|
+        detail_response = HTTParty.get(pokemon_data["url"])
+        if detail_response.success?
+          details = detail_response.parsed_response
+          pokemon_type = details["types"].map { |type| type["type"]["name"] }.join(', ')
+          pokemon_image = details["sprites"]["front_default"] || "https://example.com/default.png"
+          Pokemon.find_or_create_by(nombre: details["name"]) do |pokemon|
+            pokemon.tipo = pokemon_type
+            pokemon.imagen = pokemon_image
+            pokemon.estado_de_captura = 'no_capturado'
+          end
+        else
+          puts "Failed to retrieve details for #{pokemon_data['name']}"
+        end
+      end
+      head :ok
+    else
+      render json: { error: "Failed to connect to PokeAPI" }, status: :service_unavailable
     end
-    @pokemon.update(estado_de_captura: true)
+  end
+
+
+  # POST /pokemons/:id/capture
+  def capture
+    @pokemon.update(captured: true)
     render json: @pokemon
   end
 
-  def destroy
-    @pokemon.update(estado_de_captura: false)
+  # DELETE /pokemons/:id/release
+  def release
+    @pokemon.update(captured: false)
     render json: @pokemon
   end
 
